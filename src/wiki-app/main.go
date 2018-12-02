@@ -15,6 +15,18 @@ type Page struct {
 // パスのアドレスを設定して文字の長さを定数として持つ
 const lenPath = len("/view/")
 
+// テンプレートファイルの配列を作成
+var templates = make(map[string]*template.Template)
+
+//初期化関数
+func init() {
+	for _, tmpl := range []string{"edit", "view"} {
+		// エラーの場合Panicを起こすためのエラー処理はなし
+		t := template.Must(template.ParseFiles(tmpl + ".html"))
+		templates[tmpl] = t
+	}
+}
+
 func viewHandler(w http.ResponseWriter, r *http.Request) {
 	title := r.URL.Path[lenPath:]
 	p, err := loadPage(title)
@@ -52,15 +64,8 @@ func saveHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
-	// tmpl.htmlをgo言語のtemplateパッケージで読み取ってくる
-	t, err := template.ParseFiles(tmpl + ".html")
-	if err != nil {
-		// statusをInternalServerErrorとして出力
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
 	// tmpl.html内にTitleやBodyを入れるようにする
-	err = t.Execute(w, p)
+	err := templates[tmpl].Execute(w, p)
 	if err != nil {
 		// statusをInternalServerErrorとして出力
 		http.Error(w, err.Error(), http.StatusInternalServerError)
