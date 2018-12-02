@@ -3,12 +3,22 @@ package main
 import (
 	"fmt"
 	"io/ioutil" // golangで他のテキストファイルを読み込んだり書き込んだりできる
+	"net/http"
 )
 
 // wikiの構造体
 type Page struct {
 	Title string //タイトル
 	Body  []byte //内容
+}
+
+// パスのアドレスを設定して文字の長さを定数として持つ
+const lenPath = len("/view/")
+
+func viewHandler(w http.ResponseWriter, r *http.Request) {
+	title := r.URL.Path[lenPath:]
+	p, _ := loadPage(title)
+	fmt.Fprintf(w, "<h1>%s</h1><div>%s</div>", p.Title, p.Body)
 }
 
 // テキストファイル保存メソッド
@@ -32,8 +42,6 @@ func loadPage(title string) (*Page, error) {
 }
 
 func main() {
-	p1 := &Page{Title: "TestPage", Body: []byte("This is sample page.")}
-	p1.save()
-	p2, _ := loadPage("TestPage")
-	fmt.Println(string(p2.Body))
+	http.HandleFunc("/view/", viewHandler)
+	http.ListenAndServe(":8080", nil)
 }
