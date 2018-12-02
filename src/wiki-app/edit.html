@@ -1,6 +1,32 @@
-<h1>Editing {{.Title |html|}}</h1>
+<h1 style='background: #c2edff; padding: 0.5em;'>Wiki Page</h1>
+
+<div>
+  <ul>
+    <li><a href="/top/}">Topページへ</a></li>
+  </ul>
+</div>
+
+<h2 style='background: linear-gradient(transparent 70%, #a7d6ff 70%);'>新規作成方法</h2>
+<div>
+  "/edit/title(最初の文字は英数字)"で新しいページと説明文を作成することができます。
+</div>
+
+<h2 style='background: linear-gradient(transparent 70%, #a7d6ff 70%);'>Editing {{.Title |html|}}</h2>
 
 <form action="/save/{{.Title |html|}}" method="POST">
-  <div><textarea name="body" rows="20" cols="80">{{printf "%s" .Body |html|}}</textarea><br></div>
-  <div><input type="submit" value="Save"></div>
+  <div><textarea name="body" rows="10" cols="80" class='textarea-size'>{{printf "%s" .Body |html|}}</textarea><br></div>
+  <div><input type="submit" value="Save" class='btn-save-button'></div>
 </form>
+
+<style>
+  .btn-save-button {
+    margin: 10px;
+    padding: 10px 0;
+    font-size: 20px;
+    width: 100px;
+    background-color: #99CCFF;
+    border-radius: 3px;
+  }
+
+  .textarea-size { font-size: 20px; }
+</style>
