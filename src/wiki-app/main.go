@@ -1,9 +1,12 @@
 package main
 
 import (
+	"errors"
 	"html/template"
 	"io/ioutil" // golangで他のテキストファイルを読み込んだり書き込んだりできる
+	"log"
 	"net/http"
+	"regexp" // 文字列の正規表現
 )
 
 // wikiの構造体
@@ -18,7 +21,10 @@ const lenPath = len("/view/")
 // テンプレートファイルの配列を作成
 var templates = make(map[string]*template.Template)
 
-//初期化関数
+// 正規表現でURLを生成できる大文字小文字の英字と数字を判別する
+var titleValidator = regexp.MustCompile("^[a-zA-Z0-9]+$")
+
+// 初期化関数
 func init() {
 	for _, tmpl := range []string{"edit", "view"} {
 		// エラーの場合Panicを起こすためのエラー処理はなし
@@ -27,8 +33,22 @@ func init() {
 	}
 }
 
+// タイトルのチェックを行う
+func getTitle(w http.ResponseWriter, r *http.Request) (title string, err error) {
+	title = r.URL.Path[lenPath:]
+	if !titleValidator.MatchString(title) {
+		http.NotFound(w, r)
+		err = errors.New("Invalid Page Title")
+		log.Print(err)
+	}
+	return
+}
+
 func viewHandler(w http.ResponseWriter, r *http.Request) {
-	title := r.URL.Path[lenPath:]
+	title, err := getTitle(w, r)
+	if err != nil {
+		return
+	}
 	p, err := loadPage(title)
 	if err != nil {
 		// editHandlerのURLに飛ばすことで編集ページに飛ばすことができる
@@ -40,7 +60,10 @@ func viewHandler(w http.ResponseWriter, r *http.Request) {
 
 // 編集ページのパス
 func editHandler(w http.ResponseWriter, r *http.Request) {
-	title := r.URL.Path[lenPath:]
+	title, err := getTitle(w, r)
+	if err != nil {
+		return
+	}
 	p, err := loadPage(title)
 	if err != nil {
 		p = &Page{Title: title}
@@ -49,11 +72,14 @@ func editHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func saveHandler(w http.ResponseWriter, r *http.Request) {
-	title := r.URL.Path[lenPath:]
+	title, err := getTitle(w, r)
+	if err != nil {
+		return
+	}
 	// edit.htmlファイルからのbodyの取得
 	body := r.FormValue("body")
 	p := &Page{Title: title, Body: []byte(body)}
-	err := p.save()
+	err = p.save()
 	if err != nil {
 		// statusをInternalServerErrorとして出力
 		http.Error(w, err.Error(), http.StatusInternalServerError)
