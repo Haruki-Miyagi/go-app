@@ -19,6 +19,7 @@ func viewHandler(w http.ResponseWriter, r *http.Request) {
 	title := r.URL.Path[lenPath:]
 	p, err := loadPage(title)
 	if err != nil {
+		// editHandlerのURLに飛ばすことで編集ページに飛ばすことができる
 		http.Redirect(w, r, "/edit/"+title, http.StatusFound)
 		return
 	}
@@ -33,6 +34,16 @@ func editHandler(w http.ResponseWriter, r *http.Request) {
 		p = &Page{Title: title}
 	}
 	renderTemplate(w, "edit", p)
+}
+
+func saveHandler(w http.ResponseWriter, r *http.Request) {
+	title := r.URL.Path[lenPath:]
+	// edit.htmlファイルからのbodyの取得
+	body := r.FormValue("body")
+	p := &Page{Title: title, Body: []byte(body)}
+	p.save()
+	//作成したviewpageにリダイレクト
+	http.Redirect(w, r, "/view/"+title, http.StatusFound)
 }
 
 func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
@@ -65,5 +76,6 @@ func loadPage(title string) (*Page, error) {
 func main() {
 	http.HandleFunc("/view/", viewHandler)
 	http.HandleFunc("/edit/", editHandler)
+	http.HandleFunc("/save/", saveHandler)
 	http.ListenAndServe(":8080", nil)
 }
