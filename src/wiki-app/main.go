@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"html/template"
 	"io/ioutil" // golangで他のテキストファイルを読み込んだり書き込んだりできる
 	"net/http"
 )
@@ -18,7 +18,8 @@ const lenPath = len("/view/")
 func viewHandler(w http.ResponseWriter, r *http.Request) {
 	title := r.URL.Path[lenPath:]
 	p, _ := loadPage(title)
-	fmt.Fprintf(w, "<h1>%s</h1><div>%s</div>", p.Title, p.Body)
+	t, _ := template.ParseFiles("view.html")
+	t.Execute(w, p)
 }
 
 // 編集ページのパス
@@ -28,12 +29,10 @@ func editHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		p = &Page{Title: title}
 	}
-	fmt.Fprintf(w, "<h1>Editing %s</h1>"+
-		"<form action\"/save/%s\" method=\"POST\">"+
-		"<textarea name=\"body\">%s</textarea><br>"+
-		"<input type=\"submit\" value=\"Save\">"+
-		"</form>",
-		p.Title, p.Title, p.Body)
+	// edit.htmlをgo言語のtemplateパッケージで読み取ってくる
+	t, _ := template.ParseFiles("edit.html")
+	// edit.html内にTitleやBodyを入れるようにする
+	t.Execute(w, p)
 }
 
 // テキストファイル保存メソッド
