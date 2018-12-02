@@ -1,0 +1,4 @@
+<h1>Wiki Page</h1>
+{{range .}}
+<p><a href="/view/{{. |html|}}">{{. |html|}}</a> [<a href="/edit/{{. |html|}}">edit</a>]</p>
+{{end}}

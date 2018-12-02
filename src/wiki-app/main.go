@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"regexp" // 文字列の正規表現
+	"strings"
 )
 
 // wikiの構造体
@@ -17,6 +18,9 @@ type Page struct {
 
 // パスのアドレスを設定して文字の長さを定数として持つ
 const lenPath = len("/view/")
+
+// .txt
+const expend_string = ".txt"
 
 // テンプレートファイルの配列を作成
 var templates = make(map[string]*template.Template)
@@ -42,6 +46,38 @@ func getTitle(w http.ResponseWriter, r *http.Request) (title string, err error) 
 		log.Print(err)
 	}
 	return
+}
+
+func topHandler(w http.ResponseWriter, r *http.Request) {
+	// main.goがいる階層のディレクトリにある.txtデータを取得する
+	files, err := ioutil.ReadDir("./")
+	if err != nil {
+		err = errors.New("所定のディレクトリ内にテキストファイルがありません")
+		log.Print(err)
+		return
+	}
+
+	var paths []string    // テキストデータの名前
+	var fileName []string // テキストデータのファイル名
+	for _, file := range files {
+		// 対象となる.txtデータのみ取得する
+		if strings.HasSuffix(file.Name(), expend_string) {
+			fileName = strings.Split(string(file.Name()), expend_string)
+			paths = append(paths, fileName[0])
+		}
+	}
+
+	if paths == nil {
+		err = errors.New("テキストファイルが存在しません")
+		log.Print(err)
+	}
+
+	t := template.Must(template.ParseFiles("top.html"))
+	err = t.Execute(w, paths)
+	if err != nil {
+		// statusをInternalServerErrorとして出力
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 func viewHandler(w http.ResponseWriter, r *http.Request, title string) {
@@ -121,6 +157,7 @@ func loadPage(title string) (*Page, error) {
 }
 
 func main() {
+	http.HandleFunc("/top/", topHandler)
 	http.HandleFunc("/view/", makeHandler(viewHandler))
 	http.HandleFunc("/edit/", makeHandler(editHandler))
 	http.HandleFunc("/save/", makeHandler(saveHandler))
