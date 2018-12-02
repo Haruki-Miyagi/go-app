@@ -18,8 +18,7 @@ const lenPath = len("/view/")
 func viewHandler(w http.ResponseWriter, r *http.Request) {
 	title := r.URL.Path[lenPath:]
 	p, _ := loadPage(title)
-	t, _ := template.ParseFiles("view.html")
-	t.Execute(w, p)
+	renderTemplate(w, "view", p)
 }
 
 // 編集ページのパス
@@ -29,9 +28,13 @@ func editHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		p = &Page{Title: title}
 	}
-	// edit.htmlをgo言語のtemplateパッケージで読み取ってくる
-	t, _ := template.ParseFiles("edit.html")
-	// edit.html内にTitleやBodyを入れるようにする
+	renderTemplate(w, "edit", p)
+}
+
+func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
+	// tmpl.htmlをgo言語のtemplateパッケージで読み取ってくる
+	t, _ := template.ParseFiles(tmpl + ".html")
+	// tmpl.html内にTitleやBodyを入れるようにする
 	t.Execute(w, p)
 }
 
