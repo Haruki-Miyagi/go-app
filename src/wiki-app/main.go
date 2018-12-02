@@ -41,16 +41,30 @@ func saveHandler(w http.ResponseWriter, r *http.Request) {
 	// edit.htmlファイルからのbodyの取得
 	body := r.FormValue("body")
 	p := &Page{Title: title, Body: []byte(body)}
-	p.save()
+	err := p.save()
+	if err != nil {
+		// statusをInternalServerErrorとして出力
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	//作成したviewpageにリダイレクト
 	http.Redirect(w, r, "/view/"+title, http.StatusFound)
 }
 
 func renderTemplate(w http.ResponseWriter, tmpl string, p *Page) {
 	// tmpl.htmlをgo言語のtemplateパッケージで読み取ってくる
-	t, _ := template.ParseFiles(tmpl + ".html")
+	t, err := template.ParseFiles(tmpl + ".html")
+	if err != nil {
+		// statusをInternalServerErrorとして出力
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 	// tmpl.html内にTitleやBodyを入れるようにする
-	t.Execute(w, p)
+	err = t.Execute(w, p)
+	if err != nil {
+		// statusをInternalServerErrorとして出力
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
 }
 
 // テキストファイル保存メソッド
