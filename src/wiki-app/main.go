@@ -21,6 +21,21 @@ func viewHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "<h1>%s</h1><div>%s</div>", p.Title, p.Body)
 }
 
+// 編集ページのパス
+func editHandler(w http.ResponseWriter, r *http.Request) {
+	title := r.URL.Path[lenPath:]
+	p, err := loadPage(title)
+	if err != nil {
+		p = &Page{Title: title}
+	}
+	fmt.Fprintf(w, "<h1>Editing %s</h1>"+
+		"<form action\"/save/%s\" method=\"POST\">"+
+		"<textarea name=\"body\">%s</textarea><br>"+
+		"<input type=\"submit\" value=\"Save\">"+
+		"</form>",
+		p.Title, p.Title, p.Body)
+}
+
 // テキストファイル保存メソッド
 func (p *Page) save() error { //errorが発生したらエラーをだすようにする
 	// タイトルの名前でテキストファイルを作成し、保存する(重複をなくす)
@@ -43,5 +58,6 @@ func loadPage(title string) (*Page, error) {
 
 func main() {
 	http.HandleFunc("/view/", viewHandler)
+	http.HandleFunc("/edit/", editHandler)
 	http.ListenAndServe(":8080", nil)
 }
