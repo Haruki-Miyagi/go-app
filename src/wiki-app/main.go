@@ -37,17 +37,6 @@ func init() {
 	}
 }
 
-// タイトルのチェックを行う
-func getTitle(w http.ResponseWriter, r *http.Request) (title string, err error) {
-	title = r.URL.Path[lenPath:]
-	if !titleValidator.MatchString(title) {
-		http.NotFound(w, r)
-		err = errors.New("Invalid Page Title")
-		log.Print(err)
-	}
-	return
-}
-
 func topHandler(w http.ResponseWriter, r *http.Request) {
 	// main.goがいる階層のディレクトリにある.txtデータを取得する
 	files, err := ioutil.ReadDir("./")
@@ -113,6 +102,7 @@ func saveHandler(w http.ResponseWriter, r *http.Request, title string) {
 	http.Redirect(w, r, "/view/"+title, http.StatusFound)
 }
 
+// タイトルのチェックを行う(バリデーション)
 func makeHandler(fn func(http.ResponseWriter, *http.Request, string)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Requestからページタイトルを取り出して、fnを呼び出す
