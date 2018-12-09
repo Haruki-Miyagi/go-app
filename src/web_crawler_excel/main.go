@@ -6,9 +6,22 @@ import (
 	"net/http"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/tealeg/xlsx"
 )
 
 func main() {
+	var file *xlsx.File
+	var sheet *xlsx.Sheet
+	var row *xlsx.Row
+	var cell *xlsx.Cell
+	var err error
+
+	file = xlsx.NewFile()
+	sheet, err = file.AddSheet("Sheet1")
+	if err != nil {
+		fmt.Printf(err.Error())
+	}
+
 	res, err := http.Get("https://github.com/Haruki-Miyagi?tab=repositories")
 	if err != nil {
 		log.Fatal(err)
@@ -29,6 +42,16 @@ func main() {
 		// For each item found, get the band and title
 		band := s.Find("a")
 		link, _ := band.Last().Attr("href")
+
+		// xlsxファイルを作成
+		row = sheet.AddRow()
+		cell = row.AddCell()
+		cell.Value = link
+		err = file.Save("MyXLSXFile.xlsx")
+		if err != nil {
+			fmt.Printf(err.Error())
+		}
+
 		fmt.Printf("aタグ %s \n", link)
 	})
 }
